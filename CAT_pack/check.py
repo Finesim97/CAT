@@ -37,6 +37,7 @@ def convert_arguments(args):
         return (database_folder,
                 taxonomy_folder,
                 args.path_to_diamond,
+                arg.compress,
                 args.quiet,
                 args.no_log,
                 args.nproc)
@@ -67,6 +68,7 @@ def convert_arguments(args):
                 args.diamond_file,
                 args.path_to_prodigal,
                 args.path_to_diamond,
+                args.compress,
                 args.force,
                 args.quiet,
                 args.no_log,
@@ -93,6 +95,7 @@ def convert_arguments(args):
                 args.diamond_file,
                 args.path_to_prodigal,
                 args.path_to_diamond,
+                args.compress,
                 args.force,
                 args.quiet,
                 args.no_log,
@@ -115,6 +118,7 @@ def convert_arguments(args):
                 args.diamond_file,
                 args.path_to_prodigal,
                 args.path_to_diamond,
+                args.compress,
                 args.force,
                 args.quiet,
                 args.no_log,
@@ -286,11 +290,11 @@ def inspect_taxonomy_folder(taxonomy_folder):
     prot_accession2taxid_file = None
 
     for file_ in os.listdir(taxonomy_folder):
-        if file_ == 'nodes.dmp':
+        if file_ == 'nodes.dmp' or file_ == 'nodes.dmp.gz':
             nodes_dmp = '{0}/{1}'.format(taxonomy_folder, file_)
-        elif file_ == 'names.dmp':
+        elif file_ == 'names.dmp' or file_ == 'names.dmp.gz':
             names_dmp = '{0}/{1}'.format(taxonomy_folder, file_)
-        elif file_.endswith('prot.accession2taxid.gz'):
+        elif file_.endswith('prot.accession2taxid') or file_.endswith('prot.accession2taxid.gz'):
             prot_accession2taxid_file = '{0}/{1}'.format(taxonomy_folder,
                                                          file_)
 
@@ -309,11 +313,13 @@ def inspect_database_folder(database_folder):
     for file_ in os.listdir(database_folder):
         if file_.endswith('nr.gz'):
             nr_file = '{0}/{1}'.format(database_folder, file_)
-        elif file_.endswith('.dmnd'):
+        elif file_.endswith('.dmnd') or file_.endswith('.dmnd.gz') :
             diamond_database = '{0}/{1}'.format(database_folder, file_)
-        elif file_.endswith('fastaid2LCAtaxid'):
+        elif (file_.endswith('fastaid2LCAtaxid') or 
+            file_.endswith('fastaid2LCAtaxid.gz')):
             fastaid2LCAtaxid_file = '{0}/{1}'.format(database_folder, file_)
-        elif file_.endswith('taxids_with_multiple_offspring'):
+        elif (file_.endswith('taxids_with_multiple_offspring') or 
+              file_.endswith('taxids_with_multiple_offspring.gz')):
             taxids_with_multiple_offspring_file = ('{0}/{1}'
                                                    ''.format(database_folder,
                                                              file_))
@@ -433,7 +439,7 @@ def check_whether_file_is_fasta(file_):
     if not os.path.isfile(file_):
         return is_fasta
     
-    with open(file_, 'r') as f1:
+    with shared.open_maybe_gzip(file_, 'rt') as f1:
         for line in f1:
             if line.startswith('>'):
                 is_fasta = True

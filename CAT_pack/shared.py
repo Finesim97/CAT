@@ -5,7 +5,24 @@ import decimal
 import math
 import subprocess
 import sys
+import gzip
+import mimetypes
+import os
 
+def is_gziped(file_tocheck):
+    if "gzip" in mimetypes.guess_type(file_tocheck):
+        return True
+    if os.path.isfile(file_tocheck):
+        with open(file_tocheck,"rb") as con:
+            return con.read(2) == b'\x1f\x8b'
+    else:
+        return False
+
+def open_maybe_gzip(filename, *args, **kwargs):
+    if is_gziped(filename):
+        return gzip.open(filename, *args, **kwargs)
+    else:
+        open(filename, *args, **kwargs)
 
 def give_user_feedback(message,
                        log_file=None,
@@ -73,6 +90,7 @@ def run_diamond(path_to_diamond,
                 tmpdir,
                 top,
                 log_file,
+                compress,
                 quiet):
     if not sensitive:
         mode = 'fast'
@@ -112,6 +130,7 @@ def run_diamond(path_to_diamond,
                    '--block-size', str(block_size),
                    '--index-chunks', str(index_chunks),
                    '--tmpdir', tmpdir,
+                   '--compress', str(int(compress)),
                    '--quiet']
 
         if sensitive:
@@ -159,7 +178,7 @@ def import_ORFs(predicted_proteins_fasta, log_file, quiet):
 
     contig2ORFs = {}
     
-    with open(predicted_proteins_fasta, 'r') as f1:
+    with shared.open_maybe_gzip(predicted_proteins_fasta, 'rt') as f1:
         for line in f1:
             line = line.rstrip()
 
@@ -187,7 +206,7 @@ def parse_diamond_file(diamond_file,
 
     ORF = 'first ORF'
     ORF_done = False
-    with open(diamond_file, 'r') as f1:
+    with shared.open_maybe_gzip(diamond_file, 'rt') as f1:
         for line in f1:
             if line.startswith(ORF) and ORF_done == True:
                 # The ORF has already surpassed its minimum allowed bit-score.

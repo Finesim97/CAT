@@ -12,7 +12,8 @@ def import_nodes(nodes_dmp, log_file, quiet):
     taxid2parent = {}
     taxid2rank = {}
 
-    with open(nodes_dmp, 'r') as f1:
+
+    with shared.open_maybe_gzip(nodes_dmp, 'rt') as f1:
         for line in f1:
             line = line.split('\t')
 
@@ -32,7 +33,7 @@ def import_names(names_dmp, log_file, quiet):
 
     taxid2name = {}
 
-    with open(names_dmp, 'r') as f1:
+    with shared.open_maybe_gzip(names_dmp, 'rt') as f1:
         for line in f1:
             line = line.split('\t')
 
@@ -51,7 +52,7 @@ def import_fastaid2LCAtaxid(fastaid2LCAtaxid_file, all_hits, log_file, quiet):
 
     fastaid2LCAtaxid = {}
 
-    with open(fastaid2LCAtaxid_file, 'r') as f1:
+    with shared.open_maybe_gzip(fastaid2LCAtaxid_file, 'rt') as f1:
         for line in f1:
             line = line.rstrip().split('\t')
 
@@ -70,7 +71,7 @@ def import_taxids_with_multiple_offspring(taxids_with_multiple_offspring_file,
 
     taxids_with_multiple_offspring = set()
 
-    with open(taxids_with_multiple_offspring_file, 'r') as f1:
+    with shared.open_maybe_gzip(taxids_with_multiple_offspring_file, 'rt') as f1:
         for line in f1:
             line = line.rstrip()
 
