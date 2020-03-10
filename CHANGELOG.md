@@ -1,5 +1,8 @@
 # Changelog
 
+## x.x.x
+Added optional output compression and automatic input file decompression.
+
 ## 5.0.3
 Bug fix for single bin mode.
 

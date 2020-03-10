@@ -18,11 +18,16 @@ def is_gziped(file_tocheck):
     else:
         return False
 
-def open_maybe_gzip(filename, *args, **kwargs):
-    if is_gziped(filename):
-        return gzip.open(filename, *args, **kwargs)
-    else:
-        open(filename, *args, **kwargs)
+class open_maybe_gzip:
+    def __init__ (self, filename, *args, **kwargs):
+        if is_gziped(filename):
+            self.f = gzip.open(filename, *args, **kwargs)
+        else:
+            self.f = open(filename, *args, **kwargs)
+    def __enter__ (self):
+        return self.f
+    def __exit__ (self, exc_type, exc_value, traceback):
+        self.f.close()
 
 def give_user_feedback(message,
                        log_file=None,
@@ -178,7 +183,7 @@ def import_ORFs(predicted_proteins_fasta, log_file, quiet):
 
     contig2ORFs = {}
     
-    with shared.open_maybe_gzip(predicted_proteins_fasta, 'rt') as f1:
+    with open_maybe_gzip(predicted_proteins_fasta, 'rt') as f1:
         for line in f1:
             line = line.rstrip()
 
@@ -206,7 +211,7 @@ def parse_diamond_file(diamond_file,
 
     ORF = 'first ORF'
     ORF_done = False
-    with shared.open_maybe_gzip(diamond_file, 'rt') as f1:
+    with open_maybe_gzip(diamond_file, 'rt') as f1:
         for line in f1:
             if line.startswith(ORF) and ORF_done == True:
                 # The ORF has already surpassed its minimum allowed bit-score.
