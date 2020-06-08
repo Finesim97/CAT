@@ -521,8 +521,8 @@ def run_fresh(args, date):
                                  ''.format(taxonomy_folder, date))
     nr_file = '{0}/{1}.nr.gz'.format(database_folder, date)
     diamond_database_prefix = '{0}/{1}.nr'.format(database_folder, date)
-    fastaid2LCAtaxid_file = ('{0}/{1}.nr.fastaid2LCAtaxid{2}compress_suffix'
-                             ''.format(database_folder, date))
+    fastaid2LCAtaxid_file = ('{0}/{1}.nr.fastaid2LCAtaxid{2}'
+                             ''.format(database_folder, date, compress_suffix))
     taxids_with_multiple_offspring_file = ('{0}/{1}.nr.taxids_with_multiple_'
                                            'offspring{2}'
                                            ''.format(database_folder, date, compress_suffix))
