@@ -37,7 +37,7 @@ def convert_arguments(args):
         return (database_folder,
                 taxonomy_folder,
                 args.path_to_diamond,
-                arg.compress,
+                args.compress,
                 args.quiet,
                 args.no_log,
                 args.nproc)
