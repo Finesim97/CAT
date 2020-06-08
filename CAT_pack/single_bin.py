@@ -395,7 +395,7 @@ def single_bin(args):
     
     bin2classification_output_file = ('{0}.bin2classification.txt{1}'
                                       ''.format(out_prefix,compress_suffix))
-    ORF2LCA_output_file = '{0}.ORF2LCA.txt,{1}'.format(out_prefix,compress_suffix)
+    ORF2LCA_output_file = '{0}.ORF2LCA.txt{1}'.format(out_prefix,compress_suffix)
 
     if not force:
         errors.append(check.check_output_file(bin2classification_output_file,
@@ -459,6 +459,7 @@ def single_bin(args):
                            tmpdir,
                            top,
                            log_file,
+                           compress,
                            quiet)
         
     (ORF2hits,
