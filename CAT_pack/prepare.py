@@ -71,6 +71,12 @@ def parse_arguments():
                           default='diamond',
                           help='Path to DIAMOND binaries. Please supply if CAT'
                                ' prepare can not find DIAMOND.')
+    optional.add_argument('-z',
+                          '--compress',
+                          dest='compress',
+                          required=False,
+                          action='store_true',
+                          help='Compress output files.')
     optional.add_argument('-q',
                           '--quiet',
                           dest='quiet',
@@ -219,9 +225,8 @@ def import_prot_accession2taxid(prot_accession2taxid_file, log_file, quiet):
     
     prot_accession2taxid = {}
 
-    with gzip.open(prot_accession2taxid_file, 'rb') as f1:
+    with gzip.open(prot_accession2taxid_file, 'rt') as f1:
         for line in f1:
-            line = line.decode('utf-8')
             line = line.split('\t')
 
             prot_accession2taxid[line[1]] = line[2]
@@ -247,9 +252,8 @@ def make_fastaid2LCAtaxid_file(taxonomy_folder,
     
     corrected = 0
     total = 0
-    with gzip.open(nr_file, 'rb') as f1, open(fastaid2LCAtaxid_file, 'w') as outf1:
+    with gzip.open(nr_file, 'rt') as f1, shared.open_maybe_gzip(fastaid2LCAtaxid_file, 'wt') as outf1:
         for line in f1:
-            line = line.decode('utf-8')
             if not line.startswith('>'):
                 continue
 
@@ -310,7 +314,7 @@ def find_offspring(taxonomy_folder, fastaid2LCAtaxid_file, log_file, quiet):
 
     taxid2offspring = {}
 
-    with open(fastaid2LCAtaxid_file, 'r') as f1:
+    with shared.open_maybe_gzip(fastaid2LCAtaxid_file, 'rt') as f1:
         for line in f1:
             line = line.rstrip().split('\t')
 
@@ -339,7 +343,7 @@ def write_taxids_with_multiple_offspring_file(taxids_with_multiple_offspring_fil
     message = 'Writing {0}.'.format(taxids_with_multiple_offspring_file)
     shared.give_user_feedback(message, log_file, quiet)
 
-    with open(taxids_with_multiple_offspring_file, 'w') as outf1:
+    with shared.open_maybe_gzip(taxids_with_multiple_offspring_file, 'wt') as outf1:
         for taxid in taxid2offspring:
             if len(taxid2offspring[taxid]) >= 2:
                 outf1.write('{0}\n'.format(taxid))
@@ -416,6 +420,7 @@ def run_fresh(args, date):
     (database_folder,
      taxonomy_folder,
      path_to_diamond,
+     compress,
      quiet,
      no_log,
      nproc) = check.convert_arguments(args)
@@ -511,16 +516,16 @@ def run_fresh(args, date):
 
         message = '{0} is created.'.format(database_folder)
         shared.give_user_feedback(message, log_file, quiet)
-        
+    compress_suffix = ".gz" if compress else ""
     prot_accession2taxid_file = ('{0}/{1}.prot.accession2taxid.gz'
                                  ''.format(taxonomy_folder, date))
     nr_file = '{0}/{1}.nr.gz'.format(database_folder, date)
     diamond_database_prefix = '{0}/{1}.nr'.format(database_folder, date)
-    fastaid2LCAtaxid_file = ('{0}/{1}.nr.fastaid2LCAtaxid'
+    fastaid2LCAtaxid_file = ('{0}/{1}.nr.fastaid2LCAtaxid{2}compress_suffix'
                              ''.format(database_folder, date))
     taxids_with_multiple_offspring_file = ('{0}/{1}.nr.taxids_with_multiple_'
-                                           'offspring'
-                                           ''.format(database_folder, date))
+                                           'offspring{2}'
+                                           ''.format(database_folder, date, compress_suffix))
     
     step_list = ['download_taxonomy_files',
                  'download_prot_accession2taxid_file',
@@ -691,7 +696,9 @@ def run_existing(args, date):
         shared.give_user_feedback(message, log_file, quiet, error=True)
 
         sys.exit(1)
-        
+
+    compress_suffix = ".gz" if compress else ""
+
     whether_to_download_nr = True
     if (nr_file is None and
         diamond_database is not None and
@@ -738,8 +745,8 @@ def run_existing(args, date):
         message = 'File fastaid2LCAtaxid will be created.'
         shared.give_user_feedback(message, log_file, quiet)
         
-        fastaid2LCAtaxid_file = ('{0}/{1}.nr.fastaid2LCAtaxid'
-                                 ''.format(database_folder, date))
+        fastaid2LCAtaxid_file = ('{0}/{1}.nr.fastaid2LCAtaxid{2}'
+                                 ''.format(database_folder, date, compress_suffix))
         step_list.append('make_fastaid2LCAtaxid_file')
     else:
         message = ('Fastaid2LCAtaxid found: {0}.'
@@ -755,9 +762,9 @@ def run_existing(args, date):
         shared.give_user_feedback(message, log_file, quiet)
 
         taxids_with_multiple_offspring_file = ('{0}/{1}.nr.taxids_with_'
-                                               'multiple_offspring'
+                                               'multiple_offspring{2}'
                                                ''.format(database_folder,
-                                                         date))
+                                                         date,compress_suffix))
         step_list.append('make_taxids_with_multiple_offspring_file')
     else:
         message = ('Taxids_with_multiple_offspring found: {0}.'

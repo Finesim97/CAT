@@ -114,6 +114,12 @@ def parse_arguments():
                           action='store_true',
                           help='Suppress marking of suggestive '
                                'classifications.')
+    optional.add_argument('-z',
+                          '--compress',
+                          dest='compress',
+                          required=False,
+                          action='store_true',
+                          help='Compress output files.')
     optional.add_argument('--force',
                           dest='force',
                           required=False,
@@ -231,6 +237,7 @@ def contigs(args):
      path_to_prodigal,
      path_to_diamond,
      no_stars,
+     compress,
      force,
      quiet,
      no_log,
@@ -345,7 +352,7 @@ def contigs(args):
     errors = []
 
     errors.append(check.check_out_prefix(out_prefix, log_file, quiet))
-    
+
     if 'run_prodigal' in step_list:
         errors.append(check.check_prodigal_binaries(path_to_prodigal,
                                                     log_file,
@@ -363,13 +370,15 @@ def contigs(args):
             errors.append(check.check_output_file(predicted_proteins_gff,
                                                   log_file,
                                                   quiet))
-            
+    
+    compress_suffix = ".gz" if compress else ""
+
     if 'run_diamond' in step_list:
         errors.append(check.check_diamond_binaries(path_to_diamond,
                                                    log_file,
                                                    quiet))
 
-        diamond_file = '{0}.alignment.diamond'.format(out_prefix)
+        diamond_file = '{0}.alignment.diamond{1}'.format(out_prefix, compress_suffix)
         
         if not force:
             errors.append(check.check_output_file(diamond_file,
@@ -384,9 +393,9 @@ def contigs(args):
                                               log_file,
                                               quiet))
     
-    contig2classification_output_file = ('{0}.contig2classification.txt'
-                                         ''.format(out_prefix))
-    ORF2LCA_output_file = '{0}.ORF2LCA.txt'.format(out_prefix)
+    contig2classification_output_file = ('{0}.contig2classification.txt{1}'
+                                         ''.format(out_prefix, compress_suffix))
+    ORF2LCA_output_file = '{0}.ORF2LCA.txt{1}'.format(out_prefix, compress_suffix)
 
     if not force:
         errors.append(check.check_output_file(contig2classification_output_file,
@@ -450,6 +459,7 @@ def contigs(args):
                            tmpdir,
                            top,
                            log_file,
+                           compress,
                            quiet)
         
     (ORF2hits,
@@ -474,7 +484,7 @@ def contigs(args):
 
     number_of_classified_contigs = 0
     
-    with open(contig2classification_output_file, 'w') as outf1, open(ORF2LCA_output_file, 'w') as outf2:
+    with shared.open_maybe_gzip(contig2classification_output_file, 'wt') as outf1, shared.open_maybe_gzip(ORF2LCA_output_file, 'wt') as outf2:
         outf1.write('# contig\tclassification\treason\tlineage\t'
                     'lineage scores\n')
         outf2.write('# ORF\tlineage\tbit-score\n')

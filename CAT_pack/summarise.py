@@ -36,7 +36,7 @@ def parse_arguments():
                           metavar='',
                           required=True,
                           type=str,
-                          help='Path to output file.')
+                          help='Path to output file. Can be a gz file.')
     
     optional = parser.add_argument_group('Optional arguments')
     
@@ -48,7 +48,7 @@ def parse_arguments():
                           type=str,
                           help='Path to contigs fasta file. This is required '
                                'if you want to summarise a contig '
-                               'classification file.')
+                               'classification file. Can be gzip compressed.')
     optional.add_argument('--force',
                           dest='force',
                           required=False,
@@ -82,7 +82,7 @@ def import_contig_lengths(contigs_fasta, log_file, quiet):
 
     contig2length = {}
 
-    with open(contigs_fasta, 'r') as f1:
+    with shared.open_maybe_gzip(contigs_fasta, 'rt') as f1:
         for line in f1:
             line = line.rstrip()
 
@@ -128,7 +128,7 @@ def summarise_contigs(input_file, output_file, contigs_fasta, force, quiet):
     message = 'Summarising...'
     shared.give_user_feedback(message, log_file, quiet)
 
-    with open(input_file, 'r') as f1:
+    with shared.open_maybe_gzip(input_file, 'rt') as f1:
         for line in f1:
             if line.startswith('#'):
                 line = line.split('\t')
@@ -192,7 +192,7 @@ def summarise_contigs(input_file, output_file, contigs_fasta, force, quiet):
     n = 0
     contig_trace = set()
     doubles = set()
-    with open(input_file, 'r') as f1:
+    with shared.open_maybe_gzip(input_file, 'rt') as f1:
         for line in f1:
             line = line.rstrip()
 
@@ -259,7 +259,7 @@ def summarise_contigs(input_file, output_file, contigs_fasta, force, quiet):
 
         sys.exit(1)
 
-    with open(output_file, 'w') as outf1:
+    with shared.open_maybe_gzip(output_file, 'wt') as outf1:
         number_of_contigs = len(contig2length)
         total_length = sum(contig2length.values())
         number_of_classified_contigs = number_of_contigs - len(length['unclassified'])
@@ -319,7 +319,7 @@ def summarise_bins(input_file, output_file, force, quiet):
     message = 'Summarising...'
     shared.give_user_feedback(message, log_file, quiet)
 
-    with open(input_file, 'r') as f1:
+    with shared.open_maybe_gzip(input_file, 'rt') as f1:
         for line in f1:
             if line.startswith('#'):
                 line = line.split('\t')
@@ -423,7 +423,7 @@ def summarise_bins(input_file, output_file, force, quiet):
         
     number_of_classified_bins = n - number_of_bins['unclassified']
 
-    with open(output_file, 'w') as outf1:
+    with shared.open_maybe_gzip(output_file, 'wt') as outf1:
         outf1.write('# total number of bins is {0}, of which {1} ({2:.2f}%) '
                     'are classified.\n'
                     ''.format(n,

@@ -28,20 +28,20 @@ def parse_arguments():
                           metavar='',
                           required=True,
                           type=str,
-                          help='Path to directory containing bins.')
+                          help='Path to directory containing bins. They can be gzip compressed.')
     required.add_argument('-d',
                           '--database_folder',
                           metavar='',
                           required=True,
                           type=str,
-                          help='Path to folder that contains database files.')
+                          help='Path to folder that contains database files. Can be gzip compressed.')
     required.add_argument('-t',
                           '--taxonomy_folder',
                           dest='taxonomy_folder',
                           metavar='',
                           required=True,
                           type=str,
-                          help='Path to folder that contains taxonomy files.')
+                          help='Path to folder that contains taxonomy files. Can be gzip compressed.')
 
     optional = parser.add_argument_group('Optional arguments')
     
@@ -88,7 +88,7 @@ def parse_arguments():
                           help='Path to concatenated predicted proteins fasta '
                                'file generated during an earlier run of BAT. '
                                'If supplied, BAT will skip the protein '
-                               'prediction step.')
+                               'prediction step. Can be gzip compressed.')
     optional.add_argument('-a',
                           '--diamond_alignment',
                           dest='diamond_file',
@@ -100,7 +100,9 @@ def parse_arguments():
                                'BAT will skip the DIAMOND alignment step and '
                                'directly classify the bins. A concatenated '
                                'predicted proteins fasta file should also be '
-                               'supplied with argument [-p / --proteins].')
+                               'supplied with argument [-p / --proteins].'
+                               'It can be gzip compressed.'
+                               )
     optional.add_argument('--path_to_prodigal',
                           dest='path_to_prodigal',
                           metavar='',
@@ -123,6 +125,12 @@ def parse_arguments():
                           action='store_true',
                           help='Suppress marking of suggestive '
                                'classifications.')
+    optional.add_argument('-z',
+                          '--compress',
+                          dest='compress',
+                          required=False,
+                          action='store_true',
+                          help='Compress output files.')
     optional.add_argument('--force',
                           dest='force',
                           required=False,
@@ -253,7 +261,7 @@ def import_bins(bin_folder,
 
         bin2contigs[bin_] = []
 
-        with open('{0}/{1}'.format(bin_folder, file_), 'r') as f1:
+        with shared.open_maybe_gzip('{0}/{1}'.format(bin_folder, file_), 'rt') as f1:
             for line in f1:
                 if line.startswith('>'):
                     contig = line.split(' ')[0].rstrip().lstrip('>')
@@ -291,9 +299,9 @@ def make_concatenated_fasta(concatenated_fasta,
     message = 'Writing {0}.'.format(concatenated_fasta)
     shared.give_user_feedback(message, log_file, quiet)
 
-    with open(concatenated_fasta, 'w') as outf1:
+    with shared.open_maybe_gzip(concatenated_fasta, 'wt') as outf1:
         for bin_ in sorted(bin2contigs):
-            with open('{0}/{1}'.format(bin_folder, bin_), 'r') as f1:
+            with shared.open_maybe_gzip('{0}/{1}'.format(bin_folder, bin_), 'rt') as f1:
                 for line in f1:
                     if line.startswith('>'):
                         contig = line.split(' ')[0].rstrip().lstrip('>')
@@ -320,6 +328,7 @@ def bins(args):
      path_to_prodigal,
      path_to_diamond,
      no_stars,
+     compress,
      force,
      quiet,
      no_log,
@@ -440,12 +449,17 @@ def bins(args):
     
     errors.append(check.check_out_prefix(out_prefix, log_file, quiet))
     
+    # Compressed file support currently is only in the Prodigal repo, not released
+    # Remove the redundant lines, when Prodigal supports it
+    compress_suffix = ""
+
     if 'run_prodigal' in step_list:
         errors.append(check.check_prodigal_binaries(path_to_prodigal,
                                                     log_file,
                                                     quiet))
 
-        concatenated_fasta = '{0}.concatenated.fasta'.format(out_prefix)
+        concatenated_fasta = '{0}.concatenated.fasta{1}'.format(out_prefix, 
+                                                                compress_suffix)
         predicted_proteins_fasta = ('{0}.concatenated.predicted_proteins.faa'
                                     ''.format(out_prefix))
         predicted_proteins_gff = ('{0}.concatenated.predicted_proteins.gff'
@@ -461,14 +475,16 @@ def bins(args):
             errors.append(check.check_output_file(predicted_proteins_gff,
                                                   log_file,
                                                   quiet))
-            
+
+    compress_suffix = ".gz" if compress else ""
+
     if 'run_diamond' in step_list:
         errors.append(check.check_diamond_binaries(path_to_diamond,
                                                    log_file,
                                                    quiet))
 
-        diamond_file = ('{0}.concatenated.alignment.diamond'
-                        ''.format(out_prefix))
+        diamond_file = ('{0}.concatenated.alignment.diamond{1}'
+                        ''.format(out_prefix, compress_suffix))
 
         if not force:
             errors.append(check.check_output_file(diamond_file,
@@ -483,9 +499,9 @@ def bins(args):
                                               log_file,
                                               quiet))
     
-    bin2classification_output_file = ('{0}.bin2classification.txt'
-                                      ''.format(out_prefix))
-    ORF2LCA_output_file = '{0}.ORF2LCA.txt'.format(out_prefix)
+    bin2classification_output_file = ('{0}.bin2classification.txt{1}'
+                                      ''.format(out_prefix, compress_suffix))
+    ORF2LCA_output_file = '{0}.ORF2LCA.txt{1}'.format(out_prefix, compress_suffix)
 
     if not force:
         errors.append(check.check_output_file(bin2classification_output_file,
@@ -558,6 +574,7 @@ def bins(args):
                            tmpdir,
                            top,
                            log_file,
+                           compress,
                            quiet)
         
     (ORF2hits,
@@ -582,7 +599,7 @@ def bins(args):
 
     number_of_classified_bins = 0
 
-    with open(bin2classification_output_file, 'w') as outf1, open(ORF2LCA_output_file, 'w') as outf2:
+    with shared.open_maybe_gzip(bin2classification_output_file, 'wt') as outf1, shared.open_maybe_gzip(ORF2LCA_output_file, 'wt') as outf2:
         outf1.write('# bin\tclassification\treason\tlineage\tlineage scores\n')
         outf2.write('# ORF\tbin\tlineage\tbit-score\n')
         

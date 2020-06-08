@@ -28,21 +28,21 @@ def parse_arguments():
                           type=str,
                           help='Path to input file. Can be either '
                                'classification output file or ORF2LCA output '
-                               'file.')
+                               'file. They can be gzip compressed')
     required.add_argument('-o',
                           '--output_file',
                           dest='output_file',
                           metavar='',
                           required=True,
                           type=str,
-                          help='Path to output file.')
+                          help='Path to output file. Is compressed with gzip if it ends with .gz.')
     required.add_argument('-t',
                           '--taxonomy_folder',
                           dest='taxonomy_folder',
                           metavar='',
                           required=True,
                           type=str,
-                          help='Path to folder that contains taxonomy files.')
+                          help='Path to folder that contains taxonomy files. Can be compressed (.gz).')
     
     optional = parser.add_argument_group('Optional arguments')
     
@@ -119,7 +119,7 @@ def add_names(args):
     message = 'Appending names...'
     shared.give_user_feedback(message, log_file, quiet)
 
-    with open(input_file, 'r') as f1:
+    with shared.open_maybe_gzip(input_file, 'rt') as f1:
         for line in f1:
             if line.startswith('#'):
                 line = line.rstrip().split('\t')
@@ -151,7 +151,7 @@ def add_names(args):
 
             sys.exit(1)
             
-    with open(input_file, 'r') as f1, open(output_file, 'w') as outf1:
+    with shared.open_maybe_gzip(input_file, 'rt') as f1, shared.open_maybe_gzip(output_file, 'wt') as outf1:
         for line in f1:
             line = line.rstrip()
 
