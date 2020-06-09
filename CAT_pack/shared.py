@@ -158,7 +158,7 @@ def import_contig_names(fasta_file, log_file, quiet):
     
     contig_names = set()
     
-    with open(fasta_file, 'r') as f1:
+    with open_maybe_gzip(fasta_file, 'rt') as f1:
         for line in f1:
             if line.startswith('>'):
                 contig = line.split(' ')[0].lstrip('>').rstrip()
