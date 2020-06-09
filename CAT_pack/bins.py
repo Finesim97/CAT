@@ -552,6 +552,7 @@ def bins(args):
                             concatenated_fasta,
                             predicted_proteins_fasta,
                             predicted_proteins_gff,
+                            tmpdir,
                             log_file,
                             quiet)
         

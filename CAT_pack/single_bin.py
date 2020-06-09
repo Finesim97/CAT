@@ -437,6 +437,7 @@ def single_bin(args):
                             bin_fasta,
                             predicted_proteins_fasta,
                             predicted_proteins_gff,
+                            tmpdir,
                             log_file,
                             quiet)
         

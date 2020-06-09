@@ -6,6 +6,8 @@ import math
 import subprocess
 import sys
 import gzip
+import shutil
+import tempfile
 import mimetypes
 import os
 
@@ -56,6 +58,7 @@ def run_prodigal(path_to_prodigal,
                  contigs_fasta,
                  predicted_proteins_fasta,
                  predicted_proteins_gff,
+                 tmpdir,
                  log_file,
                  quiet):
     message = ('Running Prodigal for ORF prediction. Files {0} and {1} will '
@@ -63,6 +66,19 @@ def run_prodigal(path_to_prodigal,
                'or BAT in your publication!'.format(predicted_proteins_fasta,
                                                     predicted_proteins_gff))
     give_user_feedback(message, log_file, quiet)
+
+    # Current Prodigal version doesn't support compressed input
+    # It outputs cabbage with compressed files currently.
+    inputcompressed = is_gziped(contigs_fasta)
+    temp_uncompressed_file = None
+
+    if inputcompressed:
+        temp_uncompressed_file = tempfile.NamedTemporaryFile(dir=tmpdir)
+        with gzip.open(contigs_fasta, 'rb') as compressed_contigs_fasta:
+            shutil.copyfileobj(compressed_contigs_fasta, temp_uncompressed_file)
+        temp_uncompressed_file.flush()
+        contigs_fasta = temp_uncompressed_file.name
+
 
     try:
         command = [path_to_prodigal,
@@ -77,9 +93,12 @@ def run_prodigal(path_to_prodigal,
     except:
         message = 'ERROR: Prodigal finished abnormally.'
         give_user_feedback(message, log_file, quiet, error=True)
-
+        if temp_uncompressed_file is not None:
+            temp_uncompressed_file.close()
         sys.exit(1)
 
+    if temp_uncompressed_file is not None:
+        temp_uncompressed_file.close()
     message = 'ORF prediction done!'
     give_user_feedback(message, log_file, quiet)
     

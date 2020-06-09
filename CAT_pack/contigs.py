@@ -437,6 +437,7 @@ def contigs(args):
                             contigs_fasta,
                             predicted_proteins_fasta,
                             predicted_proteins_gff,
+                            tmpdir,
                             log_file,
                             quiet)
         
