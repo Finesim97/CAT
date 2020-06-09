@@ -320,7 +320,7 @@ def inspect_database_folder(database_folder):
     for file_ in os.listdir(database_folder):
         if file_.endswith('nr.gz'):
             nr_file = '{0}/{1}'.format(database_folder, file_)
-        elif file_.endswith('.dmnd') or file_.endswith('.dmnd.gz') :
+        elif file_.endswith('.dmnd'):
             diamond_database = '{0}/{1}'.format(database_folder, file_)
         elif (file_.endswith('fastaid2LCAtaxid') or 
             file_.endswith('fastaid2LCAtaxid.gz')):

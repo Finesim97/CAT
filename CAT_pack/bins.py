@@ -34,7 +34,7 @@ def parse_arguments():
                           metavar='',
                           required=True,
                           type=str,
-                          help='Path to folder that contains database files. Can be gzip compressed.')
+                          help='Path to folder that contains database files.')
     required.add_argument('-t',
                           '--taxonomy_folder',
                           dest='taxonomy_folder',

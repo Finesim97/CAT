@@ -36,7 +36,7 @@ def parse_arguments():
                           metavar='',
                           required=True,
                           type=str,
-                          help='Path to output file. Can be a gz file.')
+                          help='Path to output file. Can be a .gz file.')
     
     optional = parser.add_argument_group('Optional arguments')
     
