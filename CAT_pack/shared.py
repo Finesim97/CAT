@@ -131,13 +131,15 @@ def run_diamond(path_to_diamond,
                '\t\t\t\tblock-size (billions of letters): {4}\n'
                '\t\t\t\tindex-chunks: {5}\n'
                '\t\t\t\ttmpdir: {6}\n'
-               '\t\t\t\ttop: {7}'.format(predicted_proteins_fasta,
+               '\t\t\t\tcompress: {7}\n'
+               '\t\t\t\ttop: {8}'.format(predicted_proteins_fasta,
                                          diamond_database,
                                          mode,
                                          nproc,
                                          block_size,
                                          index_chunks,
                                          tmpdir,
+                                         compress,
                                          top))
     give_user_feedback(message, log_file, quiet)
 
