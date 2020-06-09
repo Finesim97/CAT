@@ -555,6 +555,7 @@ def run_existing(args, date):
     (database_folder,
      taxonomy_folder,
      path_to_diamond,
+     compress,
      quiet,
      no_log,
      nproc) = check.convert_arguments(args)
